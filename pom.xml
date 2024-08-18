@@ -15,7 +15,7 @@
     <url>https://github.com/kongyu666/Ateng-Flink</url>
     <description>
         Java8 和 Flink1.18.1 SpringBoot2.7.18
-        集群运行，使用YARN、K8S
+        单机运行，使用java -jar的方式
     </description>
 
     <!-- 项目属性 -->
@@ -47,21 +47,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-tomcat</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <!-- 使用log4j2作为日志实现 -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-log4j2</artifactId>
         </dependency>
 
         <!-- Spring Boot Starter Test: 包含用于测试Spring Boot应用程序的依赖项 -->

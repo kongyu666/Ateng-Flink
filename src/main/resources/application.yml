@@ -2,7 +2,7 @@ server:
   port: 20601
 spring:
   main:
-    web-application-type: none
+    web-application-type: servlet
   application:
     name: ${project.artifactId}
 logging:

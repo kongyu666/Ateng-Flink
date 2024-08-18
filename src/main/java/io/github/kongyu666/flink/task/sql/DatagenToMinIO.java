@@ -1,6 +1,7 @@
 package io.github.kongyu666.flink.task.sql;
 
 import cn.hutool.extra.spring.SpringUtil;
+import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.springframework.stereotype.Component;
@@ -21,8 +22,7 @@ public class DatagenToMinIO {
     public void run() {
         StreamExecutionEnvironment env = SpringUtil.getBean("flinkEnv", StreamExecutionEnvironment.class);
         StreamTableEnvironment tableEnv = SpringUtil.getBean("flinkTableEnv", StreamTableEnvironment.class);
-        tableEnv.getConfig().set("pipeline.name", "生成数据写入到minio");
-        env.enableCheckpointing(10000);
+        env.enableCheckpointing(10000, CheckpointingMode.EXACTLY_ONCE);
         // 创建表并设置水位线
         tableEnv.executeSql("CREATE TABLE my_user (\n" +
                 "  id BIGINT NOT NULL,\n" +
@@ -58,8 +58,8 @@ public class DatagenToMinIO {
                 "  create_time TIMESTAMP(3)\n" +
                 ") WITH (\n" +
                 "    'connector' = 'filesystem',\n" +
-                "    'path' = 's3a://test/flink/my_user',\n" +
-                "    'format' = 'parquet'\n" +
+                "    'path' = 's3a://test/flink',\n" +
+                "    'format' = 'json'\n" +
                 ");");
         tableEnv.executeSql("insert into my_user_file_minio select * from my_user;");
     }

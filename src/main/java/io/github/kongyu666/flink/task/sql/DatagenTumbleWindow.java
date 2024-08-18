@@ -1,10 +1,11 @@
 package io.github.kongyu666.flink.task.sql;
 
 import cn.hutool.extra.spring.SpringUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.Table;
+import org.apache.flink.table.api.TableResult;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
@@ -15,19 +16,17 @@ import org.springframework.stereotype.Component;
  * @date 2024-07-19 15:33:21
  */
 @Component
-@Slf4j
 public class DatagenTumbleWindow {
 
     /**
      * 事件时间滚动窗口(2分钟)查询
      */
-    public void run() {
-        // 获取环境
-        StreamExecutionEnvironment env = SpringUtil.getBean("flinkEnv", StreamExecutionEnvironment.class);
+    //@Async
+    @EventListener
+    public void run(ApplicationReadyEvent event) {
         StreamTableEnvironment tableEnv = SpringUtil.getBean("flinkTableEnv", StreamTableEnvironment.class);
-        tableEnv.getConfig().set("pipeline.name", "生成数据计算窗口");
         // 创建表并设置水位线
-        tableEnv.executeSql("CREATE TABLE my_user (\n" +
+        tableEnv.executeSql("CREATE TABLE my_user_window (\n" +
                 "  id BIGINT NOT NULL,\n" +
                 "  name STRING,\n" +
                 "  age INT,\n" +
@@ -55,13 +54,15 @@ public class DatagenTumbleWindow {
         Table table = tableEnv.sqlQuery("SELECT\n" +
                 "  age,\n" +
                 "  COUNT(name) AS cnt,\n" +
-                "  TUMBLE_START(event_time, INTERVAL '1' MINUTE) AS window_start,\n" +
-                "  TUMBLE_END(event_time, INTERVAL '1' MINUTE) AS window_end\n" +
-                "FROM my_user\n" +
+                "  TUMBLE_START(event_time, INTERVAL '2' MINUTE) AS window_start,\n" +
+                "  TUMBLE_END(event_time, INTERVAL '2' MINUTE) AS window_end\n" +
+                "FROM my_user_window\n" +
                 "GROUP BY\n" +
                 "  age,\n" +
-                "  TUMBLE(event_time, INTERVAL '1' MINUTE);");
-        table.execute().collect().forEachRemaining(row -> log.info(row.toString()));
+                "  TUMBLE(event_time, INTERVAL '2' MINUTE);");
+        // 执行表查询并打印结果
+        TableResult result = table.execute();
+        result.print();
     }
 
     /**
@@ -70,7 +71,7 @@ public class DatagenTumbleWindow {
     public void run2() {
         StreamTableEnvironment tableEnv = SpringUtil.getBean("flinkTableEnv", StreamTableEnvironment.class);
         // 创建表并设置水位线
-        tableEnv.executeSql("CREATE TABLE my_user (\n" +
+        tableEnv.executeSql("CREATE TABLE my_user_window (\n" +
                 "  id BIGINT NOT NULL,\n" +
                 "  name STRING,\n" +
                 "  age INT,\n" +
@@ -100,13 +101,12 @@ public class DatagenTumbleWindow {
                 "  COUNT(name) AS cnt,\n" +
                 "  TUMBLE_START(PROCTIME(), INTERVAL '2' MINUTE) AS window_start,\n" +
                 "  TUMBLE_END(PROCTIME(), INTERVAL '2' MINUTE) AS window_end\n" +
-                "FROM my_user\n" +
+                "FROM my_user_window\n" +
                 "GROUP BY\n" +
                 "  age,\n" +
                 "  TUMBLE(PROCTIME(), INTERVAL '2' MINUTE);");
         // 执行表查询并打印结果
-        table.execute();
-        /*TableResult result = table.execute();
-        result.print();*/
+        TableResult result = table.execute();
+        result.print();
     }
 }

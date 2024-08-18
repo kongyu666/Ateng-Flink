@@ -1,8 +1,9 @@
 package io.github.kongyu666.flink.task.sql;
 
 import cn.hutool.extra.spring.SpringUtil;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
@@ -14,13 +15,14 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class DatagenToKafka {
-    public void run() throws Exception {
+
+    //Async
+    @EventListener
+    public void run(ApplicationReadyEvent event) {
         // 获取环境
-        StreamExecutionEnvironment env = SpringUtil.getBean("flinkEnv", StreamExecutionEnvironment.class);
         StreamTableEnvironment tableEnv = SpringUtil.getBean("flinkTableEnv", StreamTableEnvironment.class);
-        tableEnv.getConfig().set("pipeline.name", "生成数据写入到kafka");
-        // 创建名为 my_user 的表，使用 DataGen connector 生成测试数据
-        tableEnv.executeSql("CREATE TABLE my_user (\n" +
+        // 创建名为 my_user_kafka 的表，使用 DataGen connector 生成测试数据
+        tableEnv.executeSql("CREATE TABLE my_user_kafka_source (\n" +
                 "  id BIGINT NOT NULL,\n" +
                 "  name STRING,\n" +
                 "  age INT,\n" +
@@ -69,6 +71,6 @@ public class DatagenToKafka {
                 ");");
 
         // 插入数据
-        tableEnv.executeSql("insert into my_user_kafka select * from my_user;");
+        tableEnv.executeSql("insert into my_user_kafka select * from my_user_kafka_source;");
     }
 }
